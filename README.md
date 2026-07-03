@@ -1,207 +1,135 @@
-⚠️ **Disclaimer**: *This project is in a preliminary state and under active development. Features and functionality may change significantly.*
+<div align="center">
 
-Edge Mining ⚡️🌞 is a software to optimize the use of excess energy, especially from renewable sources, through Bitcoin mining. This system automates the turning on and off of ASIC miner devices based on energy availability, production forecasts, and user-defined policies.
+<img src="images/logo.png" alt="Edge Mining logo" width="16%" />
+
+# Edge Mining
+
+**Turn excess energy — especially from renewables — into Bitcoin and heat.**
+
+[![License: MIT](https://img.shields.io/github/license/edge-mining/app)](LICENSE)
+[![Docker](https://img.shields.io/badge/deploy-Docker%20Compose-2496ED?logo=docker&logoColor=white)](#quick-start)
+[![Docs](https://img.shields.io/badge/docs-edge--mining%2Fdocs-informational)](https://github.com/edge-mining/docs)
+
+</div>
+
+> **Disclaimer:** This project is in a preliminary state and under active development. Features and functionality may change significantly.
 
 ---
 
-## 1. Prerequisites
+## What is Edge Mining?
 
-- Git
-- Docker and Docker Compose
+Edge Mining is software that optimizes the use of excess energy, especially from renewable sources, through Bitcoin mining. It automates turning ASIC miners on and off based on energy availability, production forecasts, and user-defined policies — consuming surplus power when it is available and stopping the moment it is needed elsewhere.
 
-Clone the repository and move into the project root:
+Because a miner converts virtually 100% of the electricity it draws into heat, that heat can be reused (for example, for space heating), turning otherwise wasted energy into economic value.
+
+For the full rationale — the challenge of managing excess energy and why Bitcoin mining is a flexible, dispatchable load — see the [Edge Mining documentation](https://github.com/edge-mining/docs).
+
+## Features
+
+- **Automated ASIC control** — miners are switched on/off automatically based on real-time energy availability.
+- **User-defined policies** — declarative optimization rules written in YAML.
+- **Production forecasts** — solar/renewable forecasting driven by your location (latitude/longitude) and sunrise/sunset.
+- **Heat reuse** — designed around repurposing the miners' heat output.
+- **Web UI, REST API and CLI** — manage miners, energy sources, controllers and policies from a browser, over HTTP, or through an interactive terminal.
+- **Home Assistant integration** — via the companion [add-on](https://github.com/edge-mining/addon).
+- **Single-container deployment** — backend, frontend and reverse proxy shipped together via Docker Compose.
+
+## Screenshots
+
+<!-- TODO: add screenshots of the Web UI to images/ and reference them here -->
+
+| Dashboard | Policies | Configuration |
+| :---: | :---: | :---: |
+| _screenshot coming soon_ | _screenshot coming soon_ | _screenshot coming soon_ |
+
+## The Edge Mining ecosystem
+
+Edge Mining is split across a few repositories:
+
+| Repository | Role |
+| --- | --- |
+| **[`app`](https://github.com/edge-mining/app)** _(you are here)_ | The full application — backend engine, Web UI, REST API and CLI — packaged for Docker deployment. |
+| **[`addon`](https://github.com/edge-mining/addon)** | Home Assistant integration. |
+| **[`docs`](https://github.com/edge-mining/docs)** | Project documentation: the problem/solution rationale, Domain-Driven Design architecture and glossary. |
+
+## Quick Start
+
+### Prerequisites
+
+- [Git](https://git-scm.com/)
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+
+### Install & run
+
+Clone the repository and start the stack with the first-run helper, which initializes `user_data/`, builds the image (backend + frontend + nginx) and brings everything up on port `80`:
 
 ```bash
 git clone https://github.com/edge-mining/app.git
 cd app/
-```
-
-## Run with Docker Compose
-
-You can run Edge Mining using `docker compose` in daemon mode using the provided `compose.yaml`.
-
-**Important:** The `user_data/` directory is mounted as a volume, ensuring your database, policies, and backups persist even when the container is removed.
-
-### 2.1. First start (one-time initialization)
-
-On the very first run, use the `first_start.sh` helper script from `scripts` folder, which initializes `user_data/`, creates the necessary directory structure, and then brings up the Docker stack, building the image if needed:
-
-```bash
 ./scripts/first_start.sh
 ```
 
-Under the hood this will:
-- Run `init_user_data.sh` to create/populate the `user_data/` directory
-- Run `docker compose up -d --build` to build the multi-stage image defined in `Dockerfile` (backend + frontend + nginx) and start a single container exposing the web UI and API on port `80`
+Then open:
 
-Now you can:
-- Place your optimization policy YAML files in `user_data/policies/`
-- Find rule examples in `user_data/examples/start/` and `user_data/examples/stop/`
-- Access the database at `user_data/db/edgemining.db`
-- Find automatic backups in `user_data/db/backups/`
+- **Web UI** — <http://localhost/>
+- **API** — <http://localhost/api>
+- **API docs** — <http://localhost/docs>
 
-### 2.2. Subsequent starts
+> **Note:** the `user_data/` directory is mounted as a volume, so your database, policies and backups persist across restarts and container rebuilds.
 
-After the first initialization, you can start the stack directly with Docker Compose (without forcing a rebuild every time):
+<details>
+<summary><strong>Common commands</strong></summary>
 
 ```bash
+# Start (after the first run, no rebuild)
 docker compose up -d
-```
 
-> **Note:** Volumes under `user_data/` are mounted into the container so that configuration and database files persist across restarts.
-
-### 2.3. Access the application
-
-- Web UI: `http://localhost/`
-- API (via reverse proxy): `http://localhost/api`
-- API docs (via reverse proxy): `http://localhost/docs`
-
-To see logs:
-
-```bash
+# Follow logs
 docker compose logs -f
-```
 
-### 2.4. Stop the stack
-
-```bash
+# Stop the stack
 docker compose down
-```
 
-### 2.5. Environment variables
+# Rebuild after code changes
+docker compose up -d --build
 
-The container supports a couple of environment variables that control runtime behavior:
-
-- `TIMEZONE`: timezone used by the backend (default: `Europe/Rome`)
-- `LATITUDE` and `LONGITUDE`: used for sunrise/sunset calculations
-- `SCHEDULER_INTERVAL_SECONDS`: polling interval for the scheduler loop (default: `5` seconds)
-
-When using Docker Compose, you can configure them in `compose.yaml` under the `environment` section of the `edge-mining` service. For example:
-
-```yaml
-services:
-  edge-mining:
-    environment:
-      - TIMEZONE=Europe/Rome
-      - SCHEDULER_INTERVAL_SECONDS=5
-```
-
-When running the image directly with `docker run`, you can pass them with `-e`:
-
-```bash
-docker run -d \
-  -p 80:80 \
-  -e TIMEZONE=Europe/Rome \
-  -e SCHEDULER_INTERVAL_SECONDS=5 \
-  edge-mining:latest
-```
-
-### 2.6. Core interactive CLI mode
-
-Once the container is running in the background with:
-
-```bash
-docker compose up -d
-```
-
-you can open an interactive Core CLI session inside the running container using `docker compose exec` and the startup command described in the `core` README:
-
-```bash
+# Open the interactive Core CLI inside the running container
 docker compose exec edge-mining python -m edge_mining cli interactive
-```
 
-This command:
-- enters the `edge-mining` service container defined in `compose.yaml`
-- starts the backend in **interactive CLI** mode, allowing you to manage miners, energy sources, controllers, policies, etc. via a text-based menu.
-
-To see the available CLI options you can run:
-
-```bash
-docker compose exec edge-mining python -m edge_mining cli --help
-```
----
-
-## 3. Configuration & Data
-
-User-specific data lives in the `user_data/` folder of the this application folder. This is where you can place your own configuration files, policies, and where the backend will store its database.:
-
-- `user_data/policies/` – optimization policy YAML files (automatically copied from `core/data/policies/` on first run if missing)
-- `user_data/examples/` – example rules files (copied from `core/data/examples/` on first run)
-- `user_data/db/edgemining.db` – SQLite database file used by the backend
-
-### 3.1 Initialize user data (recommended)
-
-The `first_start.sh` script already runs `init_user_data.sh` for you, so in normal usage you do not need to call it manually on the first run.
-
-If you prefer to manage things yourself, you can still run the helper script directly to create and populate the `user_data/` directory with default files:
-
-```bash
-./scripts/init_user_data.sh
-```
-
-This script:
-- Creates the `user_data/` structure if missing
-- Copies example optimization policies into `user_data/policies/`
-- Copies example rules files into `user_data/examples/`
-- Ensures a `user_data/db/edgemining.db` file exists (copying one from `core/` if present, or creating an empty file otherwise)
-
-You may want to re-run it if you intentionally delete the `user_data/` folder and want to restore the default structure.
-
----
-
-## 4. Useful Tips
-
-- **Logs**: Use `docker compose logs -f` to inspect services when running with Docker.
-- **Rebuild after changes**: If you change backend or frontend code, re-run `docker compose up -d --build` (or `./scripts/first_start.sh` if you prefer the one-shot helper) to rebuild images.
-
-## 5. Troubleshooting
-
-- If containers fail to start, check logs:
-
-```bash
-docker compose logs
-```
-
-- If ports are already in use (80), stop the conflicting services or adjust ports and Nginx configuration.
-- If the UI cannot reach the API, verify:
-  - Backend container is healthy (`docker ps`)
-  - Nginx is running and correctly proxying requests
-  - Frontend is pointing to the right API URL.
-
-## 6. Updating the Application
-
-When a new version is available, use the `update.sh` script to pull the latest changes and restart the application:
-
-```bash
+# Update to the latest version
 ./scripts/update.sh
 ```
 
-This script will:
-- Pull the latest changes from the current branch
-- Re-initialize `user_data/` (copies missing defaults only)
-- Rebuild and restart the Docker stack
+</details>
 
-### 6.1 Switching Branch
+For first-run details, environment variables, the interactive CLI, updating, switching branches and troubleshooting, see the **[Installation & Operations guide](docs/INSTALL.md)**.
 
-The `main` branch is the active development branch. For regular updates, stay on `main`; to test a feature branch, use the `switch_branch.sh` script:
+## Configuration & Data
 
-```bash
-./scripts/switch_branch.sh
-```
+User-specific data lives in the `user_data/` folder, which is mounted into the container:
 
-This script will:
-- Fetch the latest remote branches
-- Display a numbered list of all available branches
-- Prompt you to select the desired branch
-- Switch to the selected branch
-- Rebuild and restart the Docker stack
+- `user_data/policies/` — optimization policy YAML files
+- `user_data/examples/` — example rule files (`start/` and `stop/`)
+- `user_data/db/edgemining.db` — SQLite database (automatic backups in `user_data/db/backups/`)
 
----
+Runtime behavior is tuned through a few environment variables (`TIMEZONE`, `LATITUDE`/`LONGITUDE`, `SCHEDULER_INTERVAL_SECONDS`) set in `compose.yaml`.
 
-## 7. Development
+See the [Installation & Operations guide](docs/INSTALL.md) for the full configuration reference.
 
-For local development setup (without Docker), available `make` commands, linting, testing, and contribution guidelines, see:
+## Documentation
 
-- [`DEVELOPMENT.md`](DEVELOPMENT.md) — step-by-step setup and daily workflow
-- [`DEV_TOOLS.md`](DEV_TOOLS.md) — linting, formatting, testing tools and configuration
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution guidelines and PR rules
+| Document | Contents |
+| --- | --- |
+| [`docs/INSTALL.md`](docs/INSTALL.md) | Full installation, configuration and operations guide |
+| [`DEVELOPMENT.md`](DEVELOPMENT.md) | Local development setup and daily workflow |
+| [`DEV_TOOLS.md`](DEV_TOOLS.md) | Linting, formatting and testing tools |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution guidelines and PR rules |
+| [edge-mining/docs](https://github.com/edge-mining/docs) | Project rationale, DDD architecture and glossary |
+
+## Contributing
+
+Contributions are welcome! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request.
+
+## License
+
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.

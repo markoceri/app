@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Miner controller add/edit form now uses the shared schema-driven configuration form, so Home Assistant controllers (e.g. generic socket) benefit from entity/unit pairing and the unit segmented controls like the other forms (#17, #18).
 - Cleaned up sidebar header: removed the "Edge Mining" text label and the username placeholder, left-aligned the logo with the sidebar menu items, and refined the green glow to originate from the logo area (#33).
 - `MinerActionService`: extracted shared `_read_miner_info` / `_read_miner_limits`helpers and a `_temp_miner_for_controller` builder, reused by the miner- and controller-level info/limits/details reads.
+- Restructured the root `README.md` into an overview-first layout (project description, features, ecosystem, quick start with collapsible commands, documentation index) and moved the detailed installation, configuration and operations content into a new `docs/INSTALL.md`. Added a 256x256 project logo (`images/logo.png` and its `images/logo.svg` source) generated from the frontend mark.
 
 ## [Pre-Release Rev3]
 
