@@ -6,9 +6,10 @@
 
 **Turn excess energy — especially from renewables — into Bitcoin and heat.**
 
+[![Release](https://img.shields.io/github/v/release/edge-mining/app?logo=github)](https://github.com/edge-mining/app/releases)
 [![License: MIT](https://img.shields.io/github/license/edge-mining/app)](LICENSE)
-[![Docker](https://img.shields.io/badge/deploy-Docker%20Compose-2496ED?logo=docker&logoColor=white)](#quick-start)
 [![Docs](https://img.shields.io/badge/docs-edge--mining%2Fdocs-informational)](https://github.com/edge-mining/docs)
+[![Website](https://img.shields.io/website?up_message=online&down_message=offline&url=https%3A%2F%2Fedge-mining.github.io%2F&label=website)](https://edge-mining.github.io/)
 
 </div>
 
